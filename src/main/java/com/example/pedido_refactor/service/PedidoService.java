@@ -23,46 +23,98 @@ public class PedidoService {
                                  boolean esUrgente,
                                  String codigoDescuento) {
 
-        // Validación cliente
-        if (clienteId == null
-                || datosCliente == null
-                || datosCliente.getNombre() == null
-                || datosCliente.getNombre().isBlank()
-                || datosCliente.getEmail() == null
-                || !datosCliente.getEmail().contains("@")) {
-
+        if (!clienteValido(clienteId, datosCliente)) {
             return "ERROR_CLIENTE";
         }
 
-        // Calculo total
+        double total = calcularTotal(productosIds, cantidades);
+
+        if (total == -1) {
+            return "ERROR_PRODUCTO";
+        }
+
+        double totalConDescuento =
+                aplicarDescuento(total, codigoDescuento);
+
+        notificarCliente(datosCliente, esUrgente);
+
+        return persistirPedido(
+                clienteId,
+                datosCliente,
+                totalConDescuento
+        );
+    }
+
+    // =========================
+    // EXTRACT METHOD
+    // =========================
+
+    private boolean clienteValido(Long clienteId,
+                                  DatosCliente datosCliente) {
+
+        return clienteId != null
+                && datosCliente != null
+                && datosCliente.getNombre() != null
+                && !datosCliente.getNombre().isBlank()
+                && datosCliente.getEmail() != null
+                && datosCliente.getEmail().contains("@");
+    }
+
+    private double calcularTotal(List<Long> productosIds,
+                                 List<Integer> cantidades) {
+
         double total = 0;
 
         for (int i = 0; i < productosIds.size(); i++) {
 
-            Producto p = repo.findProductoById(productosIds.get(i));
+            Producto producto =
+                    repo.findProductoById(productosIds.get(i));
 
-            if (p == null) {
-                return "ERROR_PRODUCTO";
+            if (producto == null) {
+                return -1;
             }
 
-            total += p.getPrecio() * cantidades.get(i);
+            total += producto.getPrecio() * cantidades.get(i);
         }
 
-        // Descuentos
-        if (codigoDescuento != null
-                && codigoDescuento.equals("VIP10")) {
+        return total;
+    }
 
-            total = total * 0.90;
+    private double aplicarDescuento(double total,
+                                    String codigoDescuento) {
 
-        } else if (codigoDescuento != null
-                && codigoDescuento.equals("NEW20")) {
-
-            total = total * 0.80;
+        if (codigoDescuento == null) {
+            return total;
         }
 
-        // Notificación
-        System.out.println("Enviando email a: " + datosCliente.getEmail());
-        System.out.println("Pedido urgente: " + esUrgente);
+        if (codigoDescuento.equals("VIP10")) {
+            return total * 0.90;
+        }
+
+        if (codigoDescuento.equals("NEW20")) {
+            return total * 0.80;
+        }
+
+        return total;
+    }
+
+    private void notificarCliente(DatosCliente datosCliente,
+                                  boolean esUrgente) {
+
+        System.out.println(
+                "Enviando email a: "
+                        + datosCliente.getEmail()
+        );
+
+        System.out.println(
+                "Pedido urgente: "
+                        + esUrgente
+        );
+    }
+
+    private String persistirPedido(Long clienteId,
+                                   DatosCliente datosCliente,
+                                   double total) {
 
         Pedido pedido = new Pedido(
                 clienteId,
