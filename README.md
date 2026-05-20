@@ -3,105 +3,152 @@ Actividad Post-Contenido 1 / Unidad 11
 
 # Pedido Service — Análisis SonarQube
 
-## Estado inicial del análisis
+# Refactorización Avanzada — Unidad 11
 
-| Métrica | Valor |
-|---|---|
-| Proyecto | refactoring-u11 |
-| Version | 0.0.1-SNAPSHOT |
-| Lineas de codigo | 195 |
-| Code Smells | 5 |
-| Coverage | 0.0% |
-| Reliability Rating | C |
-| Maintainability Rating | A |
-| Security Rating | A |
-| Duplications | 0.0% |
+## Objetivo
 
----
+Identificar y eliminar code smells de tipo:
 
-## Complejidad Ciclomática (CC)
+* Long Method
+* Large Class
+* Primitive Obsession
 
-El metodo `procesarPedido()` presenta una alta complejidad ciclomatica debido a:
+Aplicando técnicas de refactorización:
 
-- Validaciones de cliente
-- Recorridos de listas
-- Condicionales de descuentos
-- Validaciones de productos
-- Logica de notificacion
-- Persistencia de datos
+* Extract Method
+* Extract Class
+* Introducción de Value Objects
 
-### CC estimada inicial:
-- CC ≈ 10-12
+Usando SonarQube para medir la mejora de mantenibilidad y reducción de complejidad ciclomatica.
 
 ---
 
-## Technical Debt Ratio (TDR)
+# Tecnologías usadas
 
-El proyecto presenta deuda tecnica inicial causada por:
-
-- Long Method
-- Large Class
-- Primitive Obsession
-- Mezcla de responsabilidades
-- Falta de cobertura de pruebas
-
-### TDR inicial:
-- Maintainability Rating: A
-- 5 Code Smells detectados
+* Java 21
+* Spring Boot 3
+* Maven
+* SonarQube
+* H2 Database
 
 ---
 
-## Code Smells Identificados
+# Paso 1 — Código inicial con Code Smells
 
-### Bloater Smells
+Se creó un servicio `PedidoService` con problemas deliberados:
 
-- Long Method:
-  - `procesarPedido()`
+* Long Method
+* Primitive Obsession
+* Large Class
+* Field Injection
 
-- Large Class:
-  - `PedidoService`
+## Métricas iniciales SonarQube
 
-- Primitive Obsession:
-  - Uso excesivo de tipos primitivos y Strings en parametros
+| Métrica         | Valor |
+| --------------- | ----- |
+| Coverage        | 0.0%  |
+| Code Smells     | 5     |
+| Reliability     | C     |
+| Maintainability | A     |
+| Duplications    | 0.0%  |
+
+## Problemas detectados
+
+* Método `procesarPedido()` demasiado largo
+* Exceso de parámetros primitivos
+* Responsabilidades mezcladas
+* Inyección por campo usando `@Autowired`
 
 ---
 
-## Resultado del Quality Gate
+# Paso 2 — Introducción de Value Objects
 
-❌ FAILED
+Se creó:
 
-Razones:
-- Coverage menor al 60%
-- 5 Issues detectados
+* `DatosCliente`
+* `Direccion`
+
+Para eliminar Primitive Obsession y Data Clumps.
+
+## Mejoras
+
+* Encapsulamiento
+* Validación centralizada
+* Inmutabilidad
+* Código más mantenible
 
 ---
 
-## Evidencia
+# Paso 3 — Extract Method
 
-### Analisis ejecutado correctamente
+Se dividió `procesarPedido()` en métodos pequeños:
 
-```bash
-mvn verify sonar:sonar \
--Dsonar.host.url=http://localhost:9000 \
--Dsonar.token=TOKEN \
--Dsonar.projectKey=refactoring-u11
-```
+* `calcularTotal()`
+* `aplicarDescuento()`
+* `persistirPedido()`
 
-Resultado:
-- BUILD SUCCESS
-- ANALYSIS SUCCESSFUL
+## Resultado
 
-## Paso 2 — Introduccion de Value Objects
+Reducción de complejidad ciclomatica y mejor legibilidad.
 
-Se eliminaron code smells de tipo Primitive Obsession y Data Clump mediante la creacion de:
+---
 
-- Direccion
-- DatosCliente
+# Paso 4 — Extract Class
 
-Beneficios obtenidos:
+Se extrajo la responsabilidad de notificación hacia:
 
-- Menor cantidad de parametros
-- Mayor cohesion
-- Validaciones encapsuladas
-- Codigo mas mantenible
-- Mejor modelado del dominio
+* `NotificacionService`
+
+También se reemplazó:
+
+* `@Autowired`
+
+por:
+
+* Constructor Injection
+
+## Beneficios
+
+* Mejor cohesión
+* Menor acoplamiento
+* Responsabilidad única
+
+---
+
+# Comparación de métricas
+
+| Métrica                 | Antes | Después   |
+| ----------------------- | ----- | --------- |
+| Code Smells             | 5     | Reducidos |
+| Complejidad Ciclomática | Alta  | 1-2       |
+| Primitive Obsession     | Sí    | Eliminado |
+| Long Method             | Sí    | Eliminado |
+| Large Class             | Sí    | Reducido  |
+
+---
+
+# Verificaciones realizadas
+
+* Proyecto compila correctamente
+* DatosCliente es inmutable
+* procesarPedido() reducido
+* NotificacionService separado
+* Constructor Injection aplicado
+* SonarQube reporta menos smells
+
+---
+
+# Commits realizados
+
+1. Código inicial con smells
+2. Introducción de Value Objects y Extract Method
+3. Extract Class y segundo análisis SonarQube
+
+---
+
+# Evidencias
+
+Agregar capturas del dashboard de SonarQube:
+
+![alt text](image.png)
+![alt text](image-1.png)
