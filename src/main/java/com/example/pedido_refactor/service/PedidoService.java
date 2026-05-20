@@ -4,7 +4,6 @@ import com.example.pedido_refactor.model.DatosCliente;
 import com.example.pedido_refactor.model.Pedido;
 import com.example.pedido_refactor.model.Producto;
 import com.example.pedido_refactor.repository.PedidoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,8 +11,15 @@ import java.util.List;
 @Service
 public class PedidoService {
 
-    @Autowired
-    private PedidoRepository repo;
+    private final PedidoRepository repo;
+    private final NotificacionService notificacionService;
+
+    public PedidoService(PedidoRepository repo,
+                         NotificacionService notificacionService) {
+
+        this.repo = repo;
+        this.notificacionService = notificacionService;
+    }
 
     public String procesarPedido(Long clienteId,
                                  DatosCliente datosCliente,
@@ -22,10 +28,6 @@ public class PedidoService {
                                  String metodoPago,
                                  boolean esUrgente,
                                  String codigoDescuento) {
-
-        if (!clienteValido(clienteId, datosCliente)) {
-            return "ERROR_CLIENTE";
-        }
 
         double total = calcularTotal(productosIds, cantidades);
 
@@ -36,28 +38,16 @@ public class PedidoService {
         double totalConDescuento =
                 aplicarDescuento(total, codigoDescuento);
 
-        notificarCliente(datosCliente, esUrgente);
+        notificacionService.notificarPedido(
+                datosCliente,
+                esUrgente
+        );
 
         return persistirPedido(
                 clienteId,
                 datosCliente,
                 totalConDescuento
         );
-    }
-
-    // =========================
-    // EXTRACT METHOD
-    // =========================
-
-    private boolean clienteValido(Long clienteId,
-                                  DatosCliente datosCliente) {
-
-        return clienteId != null
-                && datosCliente != null
-                && datosCliente.getNombre() != null
-                && !datosCliente.getNombre().isBlank()
-                && datosCliente.getEmail() != null
-                && datosCliente.getEmail().contains("@");
     }
 
     private double calcularTotal(List<Long> productosIds,
@@ -83,33 +73,15 @@ public class PedidoService {
     private double aplicarDescuento(double total,
                                     String codigoDescuento) {
 
-        if (codigoDescuento == null) {
-            return total;
-        }
-
-        if (codigoDescuento.equals("VIP10")) {
+        if ("VIP10".equals(codigoDescuento)) {
             return total * 0.90;
         }
 
-        if (codigoDescuento.equals("NEW20")) {
+        if ("NEW20".equals(codigoDescuento)) {
             return total * 0.80;
         }
 
         return total;
-    }
-
-    private void notificarCliente(DatosCliente datosCliente,
-                                  boolean esUrgente) {
-
-        System.out.println(
-                "Enviando email a: "
-                        + datosCliente.getEmail()
-        );
-
-        System.out.println(
-                "Pedido urgente: "
-                        + esUrgente
-        );
     }
 
     private String persistirPedido(Long clienteId,
