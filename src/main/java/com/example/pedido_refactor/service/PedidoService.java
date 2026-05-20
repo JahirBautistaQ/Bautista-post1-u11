@@ -1,5 +1,6 @@
 package com.example.pedido_refactor.service;
 
+import com.example.pedido_refactor.model.DatosCliente;
 import com.example.pedido_refactor.model.Pedido;
 import com.example.pedido_refactor.model.Producto;
 import com.example.pedido_refactor.repository.PedidoRepository;
@@ -15,12 +16,7 @@ public class PedidoService {
     private PedidoRepository repo;
 
     public String procesarPedido(Long clienteId,
-                                 String clienteNombre,
-                                 String clienteEmail,
-                                 String clienteTelefono,
-                                 String clienteDireccion,
-                                 String clienteCiudad,
-                                 String clienteCodigoPostal,
+                                 DatosCliente datosCliente,
                                  List<Long> productosIds,
                                  List<Integer> cantidades,
                                  String metodoPago,
@@ -28,10 +24,12 @@ public class PedidoService {
                                  String codigoDescuento) {
 
         // Validación cliente
-        if (clienteId == null || clienteNombre == null
-                || clienteNombre.isBlank()
-                || clienteEmail == null
-                || !clienteEmail.contains("@")) {
+        if (clienteId == null
+                || datosCliente == null
+                || datosCliente.getNombre() == null
+                || datosCliente.getNombre().isBlank()
+                || datosCliente.getEmail() == null
+                || !datosCliente.getEmail().contains("@")) {
 
             return "ERROR_CLIENTE";
         }
@@ -63,10 +61,14 @@ public class PedidoService {
         }
 
         // Notificación
-        System.out.println("Enviando email a: " + clienteEmail);
+        System.out.println("Enviando email a: " + datosCliente.getEmail());
         System.out.println("Pedido urgente: " + esUrgente);
 
-        Pedido pedido = new Pedido(clienteId, clienteNombre, total);
+        Pedido pedido = new Pedido(
+                clienteId,
+                datosCliente.getNombre(),
+                total
+        );
 
         return "OK_" + repo.save(pedido).getId();
     }
